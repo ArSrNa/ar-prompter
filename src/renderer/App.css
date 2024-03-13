@@ -13,3 +13,14 @@ body {
     font-size: 3.5rem;
     color: red
 }
+
+.pannel-text {
+    outline: none;
+    font-size: 70px;
+    color: aqua;
+    font-weight: bold;
+    text-align: right;
+    background: none;
+    border: none;
+    width: 160px;
+}

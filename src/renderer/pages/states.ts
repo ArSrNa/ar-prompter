@@ -1,5 +1,6 @@
 import { atom } from 'recoil';
 
+//场记板部分
 export const cbStart = atom({
   key: 'cbStart',
   default: false,
@@ -20,4 +21,9 @@ export const cbInfoState = atom<{
     times: 0,
   },
   dangerouslyAllowMutability: true,
+});
+
+export const startTimeState = atom<number>({
+  key: 'startTime',
+  default: 0,
 });

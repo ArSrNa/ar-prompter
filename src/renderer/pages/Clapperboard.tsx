@@ -2,20 +2,26 @@ import React, { useEffect, useState } from 'react';
 import {
   Button,
   Card,
+  Checkbox,
   Col,
+  DatePicker,
+  Dialog,
+  DialogPlugin,
   Divider,
   Form,
   Input,
   InputNumber,
+  Radio,
+  Rate,
   Row,
   Space,
   Statistic,
+  Table,
 } from 'tdesign-react';
 import moment from 'moment';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { cbInfo, cbInfoState, cbStart } from './states';
+import { cbInfo, cbInfoState, cbStart, startTimeState } from './states';
 import { MinusIcon, PlusIcon } from 'tdesign-icons-react';
-
 const { FormItem, useForm } = Form;
 
 let timer;
@@ -33,16 +39,18 @@ export default function Clapperboard() {
     >
       <Timer />
       <Pannel />
-      <div>
+      {/* <ProjectTable /> */}
+
+      {/* <div>
         <Button onClick={() => setStart(true)}>启动</Button>
         <Button onClick={() => setStart(false)}>停止</Button>
-      </div>
+      </div> */}
     </div>
   );
 }
 
 function Timer() {
-  const [startTime, setStartTime] = useState<number>(0);
+  const [startTime, setStartTime] = useRecoilState<number>(startTimeState);
   const [nowTime, setNowTime] = useState<string>('');
   const start = useRecoilValue(cbStart);
   useEffect(() => {
@@ -55,7 +63,7 @@ function Timer() {
     if (start) {
       timer = setInterval(() => {
         let time = new Date().getTime();
-        setStartTime(time - stTime - 8 * 3600 * 1000);
+        setStartTime(time - stTime);
       });
     } else {
       clearInterval(timer);
@@ -74,7 +82,9 @@ function Timer() {
       <Col span={6}>
         <Card title="启动时间">
           <div className="timer" style={{ textAlign: 'center', height: 60 }}>
-            {moment(startTime).format('HH:mm:ss.SS')}
+            {startTime === 0
+              ? ''
+              : moment(startTime - 8 * 3600 * 1000).format('HH:mm:ss.SS')}
           </div>
         </Card>
       </Col>
@@ -83,11 +93,16 @@ function Timer() {
 }
 
 function Pannel() {
+  const [form] = useForm(null);
   const [info, setInfo] = useRecoilState(cbInfoState);
+  const [start, setStart] = useRecoilState(cbStart);
+  const startTime = useRecoilValue(startTimeState);
+
+  const [endForm] = useForm(null);
 
   const DisplayInfo = (args: {
     /**展示数值 */
-    value: string | number;
+    value: number;
     /**项目名称 */
     title: string;
     /**项目id，用于变更数值 */
@@ -99,19 +114,22 @@ function Pannel() {
         <div
           style={{
             display: 'flex',
+            justifyContent: 'flex-end',
             alignItems: 'flex-end',
             gap: 5,
           }}
         >
-          <span
-            style={{
-              fontSize: 70,
-              fontWeight: 'bold',
-              textAlign: 'right',
-              width: 140,
-            }}
-          >
-            {value}
+          <div>
+            <input
+              maxLength={5}
+              onChange={(e) => {
+                setInfo((prev) => {
+                  return { ...prev, [id]: e.currentTarget.value };
+                });
+              }}
+              value={value}
+              className="pannel-text"
+            />
             <span
               style={{
                 fontWeight: 'normal',
@@ -121,12 +139,13 @@ function Pannel() {
             >
               {title}
             </span>
-          </span>
-
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <Button
+              disabled={isNaN(value)}
               variant="text"
               icon={<PlusIcon />}
+              onTouchStart={console.log}
               onClick={() =>
                 setInfo((prev) => {
                   let value = prev[id];
@@ -135,6 +154,7 @@ function Pannel() {
               }
             />
             <Button
+              disabled={isNaN(value)}
               variant="text"
               icon={<MinusIcon />}
               onClick={() =>
@@ -152,15 +172,22 @@ function Pannel() {
 
   return (
     <>
-      <Form layout="inline">
-        <FormItem label="片名">
+      <Form
+        form={form}
+        layout="inline"
+        initialData={{
+          name: '我永远喜欢爱莉希雅',
+          director: 'Ar-Sr-Na',
+        }}
+      >
+        <FormItem label="片名" name="name">
           <Input />
         </FormItem>
-        <FormItem label="导演">
+        <FormItem label="导演" name="director">
           <Input />
         </FormItem>
-        <FormItem label="时间">
-          <Input />
+        <FormItem label="时间" name="time">
+          <DatePicker />
         </FormItem>
       </Form>
       <Row>
@@ -177,6 +204,87 @@ function Pannel() {
           <DisplayInfo id="times" value={info.times} title="次" />
         </Col>
       </Row>
+
+      {start ? (
+        <Button
+          onClick={() => {
+            setStart(false);
+            let dialog = DialogPlugin.confirm({
+              header: '结束设置',
+              body: (
+                <Form
+                  form={endForm}
+                  onSubmit={(e) => {
+                    let { add } = e.fields;
+                    if (add !== void '我永远喜欢爱莉希雅') {
+                      setInfo((prev) => {
+                        let newValue = prev[add];
+                        return { ...prev, [add]: ++newValue };
+                      });
+                    }
+                  }}
+                >
+                  <FormItem name="rate" label="评分">
+                    <Rate />
+                  </FormItem>
+                  <FormItem name="add" label="自动增加">
+                    <Radio.Group>
+                      <Radio allowUncheck value="roll">
+                        卷
+                      </Radio>
+                      <Radio allowUncheck value="scene">
+                        场
+                      </Radio>
+                      <Radio allowUncheck value="shot">
+                        镜
+                      </Radio>
+                      <Radio allowUncheck value="times">
+                        次
+                      </Radio>
+                    </Radio.Group>
+                  </FormItem>
+                </Form>
+              ),
+              onCancel: () => {
+                dialog.hide();
+              },
+              onConfirm: () => {
+                dialog.hide();
+                endForm.submit();
+                let value = {
+                  info,
+                  meta: form.getFieldsValue(true),
+                  startTime,
+                  rate: endForm.getFieldsValue(true).rate,
+                };
+                console.log(value);
+              },
+            });
+          }}
+        >
+          结束
+        </Button>
+      ) : (
+        <Button
+          onClick={() => {
+            setStart(true);
+            let value = {
+              info,
+              meta: form.getFieldsValue(true),
+            };
+            console.log(value);
+          }}
+        >
+          开始
+        </Button>
+      )}
     </>
   );
 }
+
+// function ProjectTable(){
+//   return(<Table columns={[{
+//     colKey:'项目名称',
+
+//   }]}/>)
+// }
