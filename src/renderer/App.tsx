@@ -1,50 +1,64 @@
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import icon from '../../assets/icon.svg';
+import {
+  MemoryRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from 'react-router-dom';
+import 'tdesign-react/dist/tdesign.min.css';
 import './App.css';
 
-function Hello() {
+import { Layout, Link, Menu, Space } from 'tdesign-react';
+import {
+  SearchIcon,
+  NotificationFilledIcon,
+  HomeIcon,
+} from 'tdesign-icons-react';
+import { useEffect } from 'react';
+import Prompter from './pages/Prompter';
+import Clapperboard from './pages/Clapperboard';
+import { RecoilRoot } from 'recoil';
+const { Header, Content, Footer } = Layout;
+const { HeadMenu, MenuItem } = Menu;
+function Main() {
+  const navigate = useNavigate();
   return (
-    <div>
-      <div className="Hello">
-        <img width="200" alt="icon" src={icon} />
-      </div>
-      <h1>electron-react-boilerplate</h1>
-      <div className="Hello">
-        <a
-          href="https://electron-react-boilerplate.js.org/"
-          target="_blank"
-          rel="noreferrer"
+    <Layout>
+      <Header>
+        <HeadMenu
+          value="item1"
+          logo={
+            <>
+              <img width="35" src={require('./images/logo.png')} alt="logo" />
+              <h2>Ar-Sr-Na</h2>
+            </>
+          }
         >
-          <button type="button">
-            <span role="img" aria-label="books">
-              📚
-            </span>
-            Read our docs
-          </button>
-        </a>
-        <a
-          href="https://github.com/sponsors/electron-react-boilerplate"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="folded hands">
-              🙏
-            </span>
-            Donate
-          </button>
-        </a>
-      </div>
-    </div>
+          <Space>
+            <Link onClick={() => navigate('/clapperboard')}>场记板</Link>
+            <Link onClick={() => navigate('/prompter')}>提词器</Link>
+          </Space>
+        </HeadMenu>
+      </Header>
+      <Content>
+        <Routes>
+          <Route path="/prompter" element={<Prompter />} />
+          <Route path="/clapperboard" element={<Clapperboard />} />
+        </Routes>
+      </Content>
+      <Footer>Powered by Ar-Sr-Na</Footer>
+    </Layout>
   );
 }
 
 export default function App() {
+  useEffect(() => {
+    document.documentElement.setAttribute('theme-mode', 'dark');
+  }, []);
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Hello />} />
-      </Routes>
+      <RecoilRoot>
+        <Main />
+      </RecoilRoot>
     </Router>
   );
 }

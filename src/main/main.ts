@@ -10,26 +10,15 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
-import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
-class AppUpdater {
-  constructor() {
-    log.transports.file.level = 'info';
-    autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
-  }
-}
+import express from 'express';
+import expressWs from 'express-ws';
+
+const eapp = express();
+expressWs(eapp);
 
 let mainWindow: BrowserWindow | null = null;
-
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -71,10 +60,13 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
+    width: 1200,
+    height: 600,
     icon: getAssetPath('icon.png'),
+    minWidth: 1200,
+    minHeight: 600,
     webPreferences: {
+      webSecurity: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
@@ -98,18 +90,11 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
-
   // Open urls in the user's browser
   mainWindow.webContents.setWindowOpenHandler((edata) => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
-
-  // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
-  new AppUpdater();
 };
 
 /**
@@ -135,3 +120,30 @@ app
     });
   })
   .catch(console.log);
+
+//接收最小化命令
+ipcMain.on('window-min', function () {
+  mainWindow.minimize();
+});
+
+ipcMain.on('isWindowMax', (e) => {
+  mainWindow.webContents.send('isWindowMax', mainWindow.isMaximized());
+});
+
+//接收最大化命令
+ipcMain.on('window-max', function () {
+  if (mainWindow.isMaximized()) {
+    mainWindow.restore();
+  } else {
+    mainWindow.maximize();
+  }
+  mainWindow.webContents.send('isWindowMax', mainWindow.isMaximized());
+});
+
+//接收关闭命令
+ipcMain.on('window-close', function () {
+  mainWindow.close();
+});
+
+// Powered by Ar-Sr-Na
+// ©上海绫中信息技术有限公司
