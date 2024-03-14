@@ -11,6 +11,8 @@ import {
   Form,
   Input,
   InputNumber,
+  Link,
+  Popconfirm,
   Radio,
   Rate,
   Row,
@@ -28,12 +30,23 @@ import {
   startTimeState,
 } from './states';
 import { MinusIcon, PlusIcon } from 'tdesign-icons-react';
+import { uuid } from '../plug';
 const { FormItem, useForm } = Form;
 
 let timer;
 
 export default function Clapperboard() {
-  const setStart = useSetRecoilState(cbStart);
+  const [dataSource, setDataSource] = useRecoilState(cbDataSourceState);
+
+  useEffect(() => {
+    let sDataSource = localStorage.getItem('dataSource');
+    if (sDataSource !== null) setDataSource(JSON.parse(sDataSource));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('dataSource', JSON.stringify(dataSource));
+  }, [dataSource]);
+
   return (
     <div
       style={{
@@ -43,14 +56,8 @@ export default function Clapperboard() {
         flexDirection: 'column',
       }}
     >
-      <Timer />
       <Pannel />
       <ProjectTable />
-
-      {/* <div>
-        <Button onClick={() => setStart(true)}>启动</Button>
-        <Button onClick={() => setStart(false)}>停止</Button>
-      </div> */}
     </div>
   );
 }
@@ -196,7 +203,9 @@ function Pannel() {
           <DatePicker />
         </FormItem>
       </Form>
-      <Row>
+
+      <Timer />
+      <Row style={{ height: '40vh', alignItems: 'center' }}>
         <Col span={3}>
           <DisplayInfo id="roll" value={info.roll} title="卷" />
         </Col>
@@ -219,6 +228,10 @@ function Pannel() {
               header: '结束设置',
               body: (
                 <Form
+                  initialData={{
+                    rate: 5,
+                    add: 'shot',
+                  }}
                   form={endForm}
                   onSubmit={(e) => {
                     let { add } = e.fields;
@@ -262,6 +275,7 @@ function Pannel() {
                   ...form.getFieldsValue(true),
                   startTime,
                   rate: endForm.getFieldsValue(true).rate,
+                  rowKey: uuid(),
                 };
                 setDataSource((prev) => {
                   let newArr = [...prev];
@@ -272,6 +286,7 @@ function Pannel() {
               },
             });
           }}
+          size="large"
         >
           结束
         </Button>
@@ -285,6 +300,7 @@ function Pannel() {
             };
             console.log(value);
           }}
+          size="large"
         >
           开始
         </Button>
@@ -294,33 +310,41 @@ function Pannel() {
 }
 
 function ProjectTable() {
-  const dataSource = useRecoilValue(cbDataSourceState);
+  const [dataSource, setDataSource] = useRecoilState(cbDataSourceState);
+
   return (
     <Table
       columns={[
+        {
+          colKey: 'id',
+          width: 50,
+          title: 'id',
+          cell: ({ rowIndex }) => <div>{rowIndex + 1}</div>,
+        },
         {
           colKey: 'info',
           title: '项目名称',
           cell: ({ row }) => <div>{row.name}</div>,
         },
+
         {
           colKey: 'roll',
-          width: 30,
+          width: 50,
           title: '卷',
         },
         {
           colKey: 'scene',
-          width: 30,
+          width: 50,
           title: '场',
         },
         {
           colKey: 'shot',
-          width: 30,
+          width: 50,
           title: '镜',
         },
         {
           colKey: 'times',
-          width: 30,
+          width: 50,
           title: '次',
         },
         {
@@ -331,10 +355,30 @@ function ProjectTable() {
         {
           colKey: 'startTime',
           title: '持续时长',
-          cell: ({ row }) => (
+          cell: ({ row, rowIndex }) => (
             <div>
               {moment(row.startTime - 8000 * 3600).format('HH:mm:ss.SS')}
             </div>
+          ),
+        },
+        {
+          colKey: 'handles',
+          title: '操作',
+          cell: ({ row, rowIndex }) => (
+            <Space>
+              <Popconfirm
+                content="确认删除？"
+                onConfirm={() => {
+                  setDataSource((prev) => {
+                    let newArr = [...prev];
+                    newArr.splice(rowIndex, 1);
+                    return newArr;
+                  });
+                }}
+              >
+                <Link>删除</Link>
+              </Popconfirm>
+            </Space>
           ),
         },
       ]}

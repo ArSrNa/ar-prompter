@@ -1,4 +1,5 @@
 import { atom } from 'recoil';
+import { TableRowData } from 'tdesign-react';
 
 //场记板部分
 export const cbStart = atom({
@@ -15,10 +16,10 @@ export const cbInfoState = atom<{
 }>({
   key: 'cbInfoState',
   default: {
-    roll: 0,
-    scene: 0,
-    shot: 0,
-    times: 0,
+    roll: 1,
+    scene: 1,
+    shot: 1,
+    times: 1,
   },
   dangerouslyAllowMutability: true,
 });

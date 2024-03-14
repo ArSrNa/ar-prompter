@@ -25,15 +25,33 @@ function Main() {
     <Layout>
       <Header>
         <HeadMenu
+          style={{
+            position: 'fixed',
+            zIndex: 999999,
+            backdropFilter: 'blur(20px) saturate(1.8)',
+            background: 'rgba(36,36,36,0.5)',
+          }}
           value="item1"
           logo={
-            <>
-              <img width="35" src={require('./images/logo.png')} alt="logo" />
+            <div
+              onClick={() => navigate('/')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <img
+                width={35}
+                height={35}
+                src={require('./images/logo.png')}
+                alt="logo"
+              />
               <h2>Ar-Sr-Na</h2>
-            </>
+            </div>
           }
         >
-          <Space>
+          <Space size="large">
             <Link onClick={() => navigate('/clapperboard')}>场记板</Link>
             <Link onClick={() => navigate('/prompter')}>提词器</Link>
           </Space>
