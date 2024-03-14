@@ -20,7 +20,13 @@ import {
 } from 'tdesign-react';
 import moment from 'moment';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { cbInfo, cbInfoState, cbStart, startTimeState } from './states';
+import {
+  cbDataSourceState,
+  cbInfo,
+  cbInfoState,
+  cbStart,
+  startTimeState,
+} from './states';
 import { MinusIcon, PlusIcon } from 'tdesign-icons-react';
 const { FormItem, useForm } = Form;
 
@@ -39,7 +45,7 @@ export default function Clapperboard() {
     >
       <Timer />
       <Pannel />
-      {/* <ProjectTable /> */}
+      <ProjectTable />
 
       {/* <div>
         <Button onClick={() => setStart(true)}>启动</Button>
@@ -97,7 +103,7 @@ function Pannel() {
   const [info, setInfo] = useRecoilState(cbInfoState);
   const [start, setStart] = useRecoilState(cbStart);
   const startTime = useRecoilValue(startTimeState);
-
+  const setDataSource = useSetRecoilState(cbDataSourceState);
   const [endForm] = useForm(null);
 
   const DisplayInfo = (args: {
@@ -252,11 +258,16 @@ function Pannel() {
                 dialog.hide();
                 endForm.submit();
                 let value = {
-                  info,
-                  meta: form.getFieldsValue(true),
+                  ...info,
+                  ...form.getFieldsValue(true),
                   startTime,
                   rate: endForm.getFieldsValue(true).rate,
                 };
+                setDataSource((prev) => {
+                  let newArr = [...prev];
+                  newArr.push({ ...value, rowKey: Math.random() });
+                  return newArr;
+                });
                 console.log(value);
               },
             });
@@ -269,8 +280,8 @@ function Pannel() {
           onClick={() => {
             setStart(true);
             let value = {
-              info,
-              meta: form.getFieldsValue(true),
+              ...info,
+              ...form.getFieldsValue(true),
             };
             console.log(value);
           }}
@@ -282,9 +293,52 @@ function Pannel() {
   );
 }
 
-// function ProjectTable(){
-//   return(<Table columns={[{
-//     colKey:'项目名称',
-
-//   }]}/>)
-// }
+function ProjectTable() {
+  const dataSource = useRecoilValue(cbDataSourceState);
+  return (
+    <Table
+      columns={[
+        {
+          colKey: 'info',
+          title: '项目名称',
+          cell: ({ row }) => <div>{row.name}</div>,
+        },
+        {
+          colKey: 'roll',
+          width: 30,
+          title: '卷',
+        },
+        {
+          colKey: 'scene',
+          width: 30,
+          title: '场',
+        },
+        {
+          colKey: 'shot',
+          width: 30,
+          title: '镜',
+        },
+        {
+          colKey: 'times',
+          width: 30,
+          title: '次',
+        },
+        {
+          colKey: 'rate',
+          width: 60,
+          title: '评分',
+        },
+        {
+          colKey: 'startTime',
+          title: '持续时长',
+          cell: ({ row }) => (
+            <div>
+              {moment(row.startTime - 8000 * 3600).format('HH:mm:ss.SS')}
+            </div>
+          ),
+        },
+      ]}
+      data={dataSource}
+    />
+  );
+}

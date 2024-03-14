@@ -27,3 +27,8 @@ export const startTimeState = atom<number>({
   key: 'startTime',
   default: 0,
 });
+
+export const cbDataSourceState = atom({
+  key: 'cbDataSource',
+  default: [],
+});
